@@ -27,11 +27,12 @@ public class ConnectedThread extends Thread {
         mmOutStream = tmpOut;
     }
 
-    public void write(byte[] bytes) {
+    public void write(byte[] bytes) throws IOException {
         try {
             mmOutStream.write(bytes);
         } catch (IOException e) {
             Log.e(TAG, "Error occurred when sending data", e);
+            throw new IOException();
         }
 
     }

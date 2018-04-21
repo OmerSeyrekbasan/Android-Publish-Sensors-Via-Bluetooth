@@ -3,6 +3,8 @@ package com.example.android.bluetooth;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothSocket;
 
+import java.io.IOException;
+
 public class Sensor extends Thread{
     private final String TAG = "Sensor";
     private ConnectedThread c;
@@ -12,7 +14,15 @@ public class Sensor extends Thread{
     }
 
     public void run() {
-        c.write("hello".getBytes());
+        while (true) {
+            try {
+                c.write("hello".getBytes());
+            } catch (IOException e) {
+                break;
+            }
+        }
+
     }
+
 
 }
