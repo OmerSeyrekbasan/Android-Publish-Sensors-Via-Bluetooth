@@ -44,8 +44,8 @@ public class AcceptThread extends Thread {
                 // A connection was accepted. Perform work associated with
                 // the connection in a separate thread.
 //                manageMyConnectedSocket(socket);
-                Sensor s = new Sensor(socket);
-                s.run();
+//                Sensors s = new Sensors(socket);
+//                s.run();
                 try {
                     mmServerSocket.close();
                 } catch (IOException e) {

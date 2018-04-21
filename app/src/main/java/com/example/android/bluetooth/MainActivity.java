@@ -8,6 +8,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.hardware.Sensor;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Message;
@@ -31,27 +32,28 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        checkBluetooth();
-        enableBluetooth();
-        Log.i("mode", String.valueOf(mBluetoothAdapter.getScanMode()));
-        if (mBluetoothAdapter.getScanMode() == BluetoothAdapter.SCAN_MODE_NONE);
-            startActivity( new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE));
+//        checkBluetooth();
+//        enableBluetooth();
+//        Log.i("mode", String.valueOf(mBluetoothAdapter.getScanMode()));
+//        if (mBluetoothAdapter.getScanMode() == BluetoothAdapter.SCAN_MODE_NONE);
+//            startActivity( new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE));
 //        mBluetoothAdapter.startDiscovery();
 //        IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
 //        registerReceiver(mReceiver, filter);
 
-        Set<BluetoothDevice> pairedDevices = mBluetoothAdapter.getBondedDevices();
-        if (pairedDevices.size() > 0) {
-            // There are paired devices. Get the name and address of each paired device.
-            for (BluetoothDevice device : pairedDevices) {
-                String deviceName = device.getName();
-                String deviceHardwareAddress = device.getAddress(); // MAC address
-                Log.i(deviceName, deviceHardwareAddress);
-            }
-        }
-        AcceptThread a = new AcceptThread(mBluetoothAdapter);
-        a.start();
-
+//        Set<BluetoothDevice> pairedDevices = mBluetoothAdapter.getBondedDevices();
+//        if (pairedDevices.size() > 0) {
+//            // There are paired devices. Get the name and address of each paired device.
+//            for (BluetoothDevice device : pairedDevices) {
+//                String deviceName = device.getName();
+//                String deviceHardwareAddress = device.getAddress(); // MAC address
+//                Log.i(deviceName, deviceHardwareAddress);
+//            }
+//        }
+//        AcceptThread a = new AcceptThread(mBluetoothAdapter);
+//        a.start();
+        Sensors s = new Sensors(this);
+        s.checkSensors();
 
     }
 
