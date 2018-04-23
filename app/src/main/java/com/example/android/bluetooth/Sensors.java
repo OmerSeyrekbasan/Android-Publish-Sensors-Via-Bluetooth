@@ -9,6 +9,9 @@ import android.hardware.SensorManager;
 import android.hardware.Sensor;
 import android.util.Log;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.IOException;
 import java.util.List;
 
@@ -20,12 +23,24 @@ public class Sensors extends Thread implements SensorEventListener {
     private Sensor mAcc;
     private Sensor mGyro;
     private Sensor mMagnet;
+    private boolean acc;
+    private boolean gyro;
+    private JSONObject accJSON;
+    private JSONObject gyroJSON;
+    private int ACCELEROMETER;
+    private int GYROSCOPE;
+    private int message_count;
 
     public Sensors (Context context) {
         this.context = context;
         checkSensors();
         registerSensors();
-
+        Log.i(TAG, "Sensors Have Been Registered");
+        acc = false;
+        gyro = false;
+        ACCELEROMETER = 0;
+        GYROSCOPE = 1;
+        message_count = 0;
     }
 
     public void startConnection(BluetoothSocket socket) {
@@ -35,8 +50,7 @@ public class Sensors extends Thread implements SensorEventListener {
     public void run() {
         while (true) {
             try {
-                c.write("hello".getBytes());
-            } catch (IOException e) {
+            } catch (Exception e) {
                 break;
             }
         }
@@ -63,9 +77,13 @@ public class Sensors extends Thread implements SensorEventListener {
 
     public void registerSensors() {
         mSensorManager.registerListener(this, mAcc, SensorManager.SENSOR_DELAY_NORMAL);
+        mSensorManager.registerListener(this, mGyro, SensorManager.SENSOR_DELAY_NORMAL);
     }
 
     public void unregisterSensors() {
+        mSensorManager.unregisterListener(this, mAcc);
+        mSensorManager.unregisterListener(this, mGyro);
+        Log.i(TAG, "Sensors unregistered");
         //TODO unregister sensors on onpause()
     }
 
@@ -79,11 +97,66 @@ public class Sensors extends Thread implements SensorEventListener {
 
         switch (event.sensor.getType()) {
             case Sensor.TYPE_ACCELEROMETER:
-                Log.i("Accelerormeter =", "x axis = "+ event.values[0]+ "y axis = "+ event.values[1]+ "z axis = "+ event.values[2]);
+//                Log.i("Accelerormeter =", "x axis = "+ event.values[0]+ "y axis = "+ event.values[1]+ "z axis = "+ event.values[2]);
+                try {
+                    JSONObject msg = new JSONObject("{\"accelerometer\":{ \"xAxis\":"+ event.values[0] + "," +
+                            "\"yAxis\":"+  event.values[1] + "," + "\"zAxis\":"+ event.values[2] + "} }");
+                    syncSensors(ACCELEROMETER, msg);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                break;
+            case Sensor.TYPE_GYROSCOPE:
+                try {
+//                    Log.i("Gyro =", "x axis = "+ event.values[0]+ "y axis = "+ event.values[1]+ "z axis = "+ event.values[2]);
+                    JSONObject msg = new JSONObject("{\"gyro\":{ \"xAxis\":"+ event.values[0] + "," +
+                            "\"yAxis\":"+  event.values[1] + "," + "\"zAxis\":"+ event.values[2] + "} }");
+                    syncSensors(GYROSCOPE, msg);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
         }
 
     }
+/*
+* acc = 0
+* gyro = 1
+* magneto = 2
+* */
+    public synchronized void syncSensors(int sender, JSONObject msg) {
 
+        switch (sender) {
+            case 0:
+                acc = true;
+                accJSON = msg;
+                break;
+            case 1:
+                gyro = true;
+                gyroJSON = msg;
+                break;
+        }
+        if(acc && gyro) {
+            message_count++;
+            try {
+                JSONObject combined = new JSONObject();
+                combined.put("accelerometer", accJSON.get("accelerometer"));
+                combined.put("gyro", gyroJSON.get("gyro"));
+//                Log.i(TAG, combined.toString());
+                c.write(combined.toString().getBytes());
+                acc = false;
+                gyro = false;
+            } catch (IOException e) {
+                Log.i(TAG, String.valueOf(message_count));
+                e.printStackTrace();
+                unregisterSensors();
+            }
+            catch (JSONException e) {
+                e.printStackTrace();
+            }
+
+        }
+
+    }
 
 
 

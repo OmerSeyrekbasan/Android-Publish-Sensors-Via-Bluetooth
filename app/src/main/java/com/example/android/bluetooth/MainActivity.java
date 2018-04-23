@@ -27,16 +27,15 @@ import java.util.UUID;
 public class MainActivity extends AppCompatActivity {
 
     private BluetoothAdapter mBluetoothAdapter;
-    private int REQUEST_ENABLE_BT = 10;
+    private String TAG = "Main Thread";
+    private final int REQUEST_ENABLE_BT = 10;
+    private final int REQUEST_ENABLE_DC = 95;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-//        checkBluetooth();
-//        enableBluetooth();
-//        Log.i("mode", String.valueOf(mBluetoothAdapter.getScanMode()));
-//        if (mBluetoothAdapter.getScanMode() == BluetoothAdapter.SCAN_MODE_NONE);
-//            startActivity( new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE));
+        checkBluetooth();
+        enableBluetooth();
 //        mBluetoothAdapter.startDiscovery();
 //        IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
 //        registerReceiver(mReceiver, filter);
@@ -50,60 +49,56 @@ public class MainActivity extends AppCompatActivity {
 //                Log.i(deviceName, deviceHardwareAddress);
 //            }
 //        }
-//        AcceptThread a = new AcceptThread(mBluetoothAdapter);
-//        a.start();
-        Sensors s = new Sensors(this);
-        s.checkSensors();
-
     }
 
 
     private void checkBluetooth() {
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         if (mBluetoothAdapter == null) {
-            // Device doesn't support Bluetooth
+            Log.e("ERROR","Device doesn't support bluetooth!");
         }
     }
 
     private void enableBluetooth() {
         if (!mBluetoothAdapter.isEnabled()) {
+            Log.d(TAG, "control thread will be started!" );
             Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
             startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
+        } else {
+            Log.d(TAG, "start thread will be started!" );
+            startActivityForResult( new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE), REQUEST_ENABLE_DC);
         }
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-    }
 
-
-    // Create a BroadcastReceiver for ACTION_FOUND.
-    private final BroadcastReceiver mReceiver = new BroadcastReceiver() {
-        public void onReceive(Context context, Intent intent) {
-            String action = intent.getAction();
-            if (BluetoothDevice.ACTION_FOUND.equals(action)) {
-                // Discovery has found a device. Get the BluetoothDevice
-                // object and its info from the Intent.
-                BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-                String deviceName = device.getName();
-                String deviceHardwareAddress = device.getAddress(); // MAC address
-                Log.i("Bluetooth Device:", deviceHardwareAddress + "Device Name:" + deviceName);
-            }
+        switch (requestCode) {
+            case REQUEST_ENABLE_BT:
+                startActivityForResult( new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE), REQUEST_ENABLE_DC);
+                break;
+            case REQUEST_ENABLE_DC:
+                Log.d(TAG, "accept thread will be started!" );
+                AcceptThread a = new AcceptThread(mBluetoothAdapter, this);
+                a.run();
+                break;
         }
-    };
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-
-        // Don't forget to unregister the ACTION_FOUND receiver.
-        unregisterReceiver(mReceiver);
+//
+//        if (requestCode == REQUEST_ENABLE_BT && resultCode == RESULT_OK) {
+//            startActivityForResult( new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE), REQUEST_ENABLE_DC);
+//        } else if(requestCode == REQUEST_ENABLE_BT && resultCode == RESULT_CANCELED ) {
+//            finish();
+//            return;
+//        } else if(requestCode == REQUEST_ENABLE_DC && resultCode == RESULT_OK) {
+//            Log.d(TAG, "accept thread will be started!" );
+//            AcceptThread a = new AcceptThread(mBluetoothAdapter, this);
+//            a.start();
+//        } else if(requestCode == REQUEST_ENABLE_DC && resultCode == RESULT_CANCELED) {
+//            finish();
+//            return;
+//        }
     }
-
-
-
-
 
 
 }
